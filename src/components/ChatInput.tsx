@@ -159,7 +159,7 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
         </div>
       )}
 
-      <div className={`relative flex items-center gap-2 p-2 rounded-2xl border bg-[#1A1A1A] shadow-lg transition-all duration-300 group-hover:border-gray-600 group-focus-within:border-[#8B5CF6]/50 group-focus-within:shadow-[#8B5CF6]/5 group-focus-within:scale-[1.02] ${isImageMode ? 'border-[#8B5CF6] shadow-[#8B5CF6]/20' : 'border-[#2A2A2A]'}`}>
+      <div className={`relative flex items-center gap-2 px-2 rounded-2xl border bg-[#1A1A1A] shadow-lg transition-all duration-300 group-hover:border-gray-600 group-focus-within:border-[#8B5CF6]/50 group-focus-within:shadow-[#8B5CF6]/5 group-focus-within:scale-[1.02] ${isImageMode ? 'border-[#8B5CF6] shadow-[#8B5CF6]/20' : 'border-[#2A2A2A]'}`}>
         {/* Animated background glow */}
         <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/5 to-[#8B5CF6]/0 transition-opacity duration-300 pointer-events-none ${isImageMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
 
