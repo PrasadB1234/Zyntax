@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUp, Paperclip, Sparkles, Image as ImageIcon, Palette } from "lucide-react";
+import { ArrowUp, Paperclip, Image as ImageIcon, Palette } from "lucide-react";
 import { useState, FormEvent, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -126,9 +126,7 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
     }
   };
 
-  const handleSparklesClick = () => {
-    window.location.href = 'https://mrilo.netlify.app/';
-  };
+
 
   return (
     <form onSubmit={handleSubmit} className="relative w-full group">
@@ -161,12 +159,12 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
         </div>
       )}
 
-      <div className={`relative flex items-center rounded-2xl border bg-[#1A1A1A] shadow-lg transition-all duration-300 group-hover:border-gray-600 group-focus-within:border-[#8B5CF6]/50 group-focus-within:shadow-[#8B5CF6]/5 group-focus-within:scale-[1.02] ${isImageMode ? 'border-[#8B5CF6] shadow-[#8B5CF6]/20' : 'border-[#2A2A2A]'}`}>
+      <div className={`relative flex items-center gap-2 p-2 rounded-2xl border bg-[#1A1A1A] shadow-lg transition-all duration-300 group-hover:border-gray-600 group-focus-within:border-[#8B5CF6]/50 group-focus-within:shadow-[#8B5CF6]/5 group-focus-within:scale-[1.02] ${isImageMode ? 'border-[#8B5CF6] shadow-[#8B5CF6]/20' : 'border-[#2A2A2A]'}`}>
         {/* Animated background glow */}
-        <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/5 to-[#8B5CF6]/0 transition-opacity duration-300 ${isImageMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
+        <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/5 to-[#8B5CF6]/0 transition-opacity duration-300 pointer-events-none ${isImageMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
 
-        {/* Action buttons with hover effects */}
-        <div className="absolute left-2 flex items-center gap-1 z-10">
+        {/* Action buttons (Left) */}
+        <div className="flex items-center gap-1 shrink-0 z-10">
           <Button
             type="button"
             size="icon"
@@ -191,7 +189,7 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
           </Button>
         </div>
 
-        {/* Enhanced input with focus effects */}
+        {/* Enhanced input */}
         <Input
           ref={inputRef}
           type="text"
@@ -200,21 +198,11 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
           onPaste={handlePaste}
           placeholder={isImageMode ? "Describe the image you want to generate..." : (selectedFile ? `Selected Image: ${selectedFile.name}` : "Ask anything...")}
           disabled={disabled || isUploading}
-          className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-[6.5rem] pr-4 py-4 text-sm sm:text-base text-gray-300 placeholder:text-gray-500 h-[52px]"
+          className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-4 text-sm sm:text-base text-gray-300 placeholder:text-gray-500 h-[52px] min-w-0"
         />
 
-        {/* Submit button with enhanced styling */}
-        <div className="absolute right-2 flex items-center gap-2">
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="relative h-10 w-10 rounded-full text-gray-400 hover:bg-gray-700/30 transition-all duration-300 group/sparkles"
-            onClick={handleSparklesClick}
-          >
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/10 to-[#8B5CF6]/0 opacity-0 group-hover/sparkles:opacity-100 transition-opacity duration-300" />
-            <Sparkles className="h-5 w-5 transition-all duration-300 group-hover/sparkles:scale-110 group-hover/sparkles:text-[#8B5CF6] group-hover/sparkles:-rotate-12" />
-          </Button>
+        {/* Submit button (Right) */}
+        <div className="flex items-center gap-2 shrink-0 z-10">
           <Button
             type="submit"
             size="icon"

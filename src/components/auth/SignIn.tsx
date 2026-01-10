@@ -3,7 +3,11 @@ import { Button } from '../ui/button';
 import { motion } from 'framer-motion';
 import { WikipediaSearch } from '../wiki/WikipediaSearch';
 
-export const SignIn = () => {
+interface SignInProps {
+  onClose?: () => void;
+}
+
+export const SignIn = ({ onClose }: SignInProps) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -17,7 +21,10 @@ export const SignIn = () => {
         className="bg-gradient-to-b from-[#1A1A1A] to-[#0D0D0D] rounded-xl w-full max-w-[800px] p-8 relative shadow-2xl border border-[#2A2A2A]"
       >
         {/* Close button */}
-        <button className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors"
+        >
           <X className="w-5 h-5" />
         </button>
 
@@ -68,10 +75,9 @@ export const SignIn = () => {
         >
           <Button
             variant="outline"
-            className="w-full bg-white hover:bg-gray-50 text-black flex items-center justify-center gap-3 py-6 rounded-lg transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white flex items-center justify-center gap-3 py-6 rounded-lg transition-transform hover:scale-[1.02] active:scale-[0.98] border-none"
           >
-            <img src="/google-icon.svg" alt="Google" className="w-5 h-5" />
-            <span className="font-medium">Continue with Google</span>
+            <span className="font-medium text-lg">Sign Up</span>
           </Button>
         </motion.div>
 

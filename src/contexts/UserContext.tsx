@@ -24,12 +24,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     picture: ''
   };
 
-  const [user, setUser] = useState<User | null>(mockUser);
-
-  useEffect(() => {
-    // Always set user to mock user for local mode
-    setUser(mockUser);
-  }, []);
+  const [user, setUser] = useState<User | null>(null);
 
   const handleSetUser = (newUser: User | null) => {
     setUser(newUser);

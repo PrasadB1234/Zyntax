@@ -17,10 +17,10 @@ interface ChatHeaderProps {
   handleNewChat: () => void;
 }
 
-export const ChatHeader = ({ 
-  setIsSidebarOpen, 
+export const ChatHeader = ({
+  setIsSidebarOpen,
   isSidebarOpen,
-  handleNewChat 
+  handleNewChat
 }: ChatHeaderProps) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { user, setUser } = useUser();
@@ -43,13 +43,13 @@ export const ChatHeader = ({
               <Menu size={18} className="sm:w-5 sm:h-5" />
             </Button>
             <div className="flex items-center gap-1.5 sm:gap-3">
-              <button 
+              <button
                 onClick={() => window.open('https://mrilo.netlify.app', '_self')}
                 className="flex items-center gap-1.5 sm:gap-3 hover:opacity-80 transition-opacity cursor-pointer"
               >
-                <img 
-                  src="/logo.svg" 
-                  alt="TejasGPT" 
+                <img
+                  src="/logo.svg"
+                  alt="TejasGPT"
                   className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10"
                 />
                 <span className="font-semibold text-sm sm:text-base md:text-lg tracking-wide bg-gradient-to-r from-white to-[#8B5CF6] bg-clip-text text-transparent whitespace-nowrap">
@@ -58,7 +58,7 @@ export const ChatHeader = ({
               </button>
             </div>
           </div>
-          
+
           {/* Right section with buttons */}
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <Button
@@ -131,16 +131,16 @@ export const ChatHeader = ({
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                <span className="hidden sm:inline">Sign up with Google</span>
+                <span className="hidden sm:inline">Sign Up</span>
               </Button>
             )}
           </div>
         </div>
       </nav>
 
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </>
   );
