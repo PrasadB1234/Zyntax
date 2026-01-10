@@ -149,7 +149,7 @@ export const useChat = () => {
     return newChat.id;
   };
 
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = async (message: string, imageUrl?: string | null, isImageGen: boolean = false) => {
     if (!message.trim() || isLoading) return;
 
     const currentTimestamp = new Date().toISOString();
@@ -196,8 +196,12 @@ export const useChat = () => {
 
     try {
       // Determine if it's an image request
-      const isImageRequest = message.trim().toLowerCase().startsWith('/image');
-      const prompt = isImageRequest ? message.substring(6).trim() : message;
+      // We check for legacy /image command or the new explicit flag
+      const isImageCommand = message.trim().toLowerCase().startsWith('/image');
+      const isImageRequest = isImageGen || isImageCommand;
+
+      // If it was a command, we strip the prefix. If it was the flag, we use the message as is.
+      const prompt = isImageCommand ? message.substring(6).trim() : message;
 
       const apiResponse = await callAeroApi(prompt, isImageRequest);
 

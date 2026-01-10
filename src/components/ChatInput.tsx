@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 interface ChatInputProps {
-  onSendMessage: (message: string, imageUrl?: string) => void;
+  onSendMessage: (message: string, imageUrl?: string | null, isImageGen?: boolean) => void;
   disabled?: boolean;
 }
 
@@ -88,16 +88,8 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if ((message.trim() || imageUrl) && !disabled) {
-      let finalMessage = message;
-      if (isImageMode && !message.trim().toLowerCase().startsWith('/image')) {
-        finalMessage = `/image ${message}`;
-      }
+      onSendMessage(message, imageUrl, isImageMode);
 
-      if (imageUrl) {
-        onSendMessage(finalMessage, imageUrl);
-      } else {
-        onSendMessage(finalMessage);
-      }
       setMessage("");
       setImageUrl(null);
       setSelectedFile(null);

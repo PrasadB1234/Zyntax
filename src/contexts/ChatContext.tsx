@@ -28,7 +28,7 @@ interface ChatContextType {
   chatSessions: ChatSession[];
   activeChatId: string | null;
   setActiveChatId: (id: string | null) => void;
-  handleSendMessage: (message: string) => Promise<void>;
+  handleSendMessage: (message: string, imageUrl?: string | null, isImageGen?: boolean) => Promise<void>;
   createNewChat: () => void;
   deleteChat: (chatId: string) => void;
   renameChat: (chatId: string, newTitle: string) => void;
@@ -111,7 +111,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [activeChatId, chatSessions]); // Added chatSessions to dependency array
 
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = async (message: string, imageUrl?: string | null, isImageGen: boolean = false) => {
     if (!message.trim()) return;
 
     let currentChatId = activeChatId;
@@ -160,8 +160,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Determine if it's an image request
-      const isImageRequest = message.trim().toLowerCase().startsWith('/image');
-      const prompt = isImageRequest ? message.substring(6).trim() : message;
+      const isImageCommand = message.trim().toLowerCase().startsWith('/image');
+      const isImageRequest = isImageGen || isImageCommand;
+      const prompt = isImageCommand ? message.substring(6).trim() : message;
 
       const apiResponse = await callAeroApi(prompt, isImageRequest);
 
