@@ -24,10 +24,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
     picture: ''
   };
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem('mrilo-user');
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch (error) {
+        console.error('Failed to parse user from local storage:', error);
+        localStorage.removeItem('mrilo-user');
+        return null;
+      }
+    }
+    return null;
+  });
 
   const handleSetUser = (newUser: User | null) => {
     setUser(newUser);
+    if (newUser) {
+      localStorage.setItem('mrilo-user', JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem('mrilo-user');
+    }
   };
 
   return (

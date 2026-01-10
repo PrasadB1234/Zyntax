@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useUser } from "@/contexts/UserContext";
+import { useChat } from "@/hooks/use-chat";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface ChatHeaderProps {
   setIsSidebarOpen: (open: boolean) => void;
@@ -24,6 +25,8 @@ export const ChatHeader = ({
 }: ChatHeaderProps) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { user, setUser } = useUser();
+  const { setActiveChatId } = useChat();
+  const navigate = useNavigate();
 
   const handleSignOut = () => {
     setUser(null);
@@ -44,7 +47,10 @@ export const ChatHeader = ({
             </Button>
             <div className="flex items-center gap-1.5 sm:gap-3">
               <button
-                onClick={() => window.open('https://mrilo.netlify.app', '_self')}
+                onClick={() => {
+                  setActiveChatId(null);
+                  navigate('/');
+                }}
                 className="flex items-center gap-1.5 sm:gap-3 hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <img

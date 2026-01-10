@@ -18,6 +18,7 @@ export const useChat = () => {
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [input, setInput] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Function to extract code blocks from message
   const extractCodeBlocks = (message: string): CodeBlock[] => {
@@ -36,56 +37,49 @@ export const useChat = () => {
   };
 
   // Get storage key based on user email
-  const getStorageKey = (email: string) => `mrilo_chat_history_${email}`;
+  // Get storage key based on user email
+  const getStorageKey = (email?: string) => `mrilo_chat_history_${email || 'guest'}`;
 
   // Load chat history from localStorage on mount or when user changes
   useEffect(() => {
     const loadChatHistory = () => {
       try {
-        if (user?.email) {
-          const storageKey = getStorageKey(user.email);
-          const savedHistory = localStorage.getItem(storageKey);
-          if (savedHistory) {
-            const {
-              messages: savedMessages,
-              chatSessions: savedSessions,
-              favorites: savedFavorites,
-              folders: savedFolders,
-              activeChatId: savedActiveChatId
-            } = JSON.parse(savedHistory);
+        const storageKey = getStorageKey(user?.email);
+        const savedHistory = localStorage.getItem(storageKey);
 
-            // Set all the saved data
-            setChatSessions(savedSessions || []);
-            setFavorites(savedFavorites || []);
-            setFolders(savedFolders || {});
+        if (savedHistory) {
+          const {
+            messages: savedMessages,
+            chatSessions: savedSessions,
+            favorites: savedFavorites,
+            folders: savedFolders,
+            activeChatId: savedActiveChatId
+          } = JSON.parse(savedHistory);
 
-            // If there was an active chat, restore it
-            if (savedActiveChatId) {
-              setActiveChatId(savedActiveChatId);
-              const activeChat = savedSessions.find(chat => chat.id === savedActiveChatId);
-              if (activeChat) {
-                setMessages(activeChat.messages);
-              }
-            } else if (savedSessions.length > 0) {
-              // If no active chat but there are sessions, select the most recent one
-              const mostRecentChat = savedSessions[0];
-              setActiveChatId(mostRecentChat.id);
-              setMessages(mostRecentChat.messages);
-            } else {
-              // No chats exist, start fresh
-              setMessages([]);
-              setActiveChatId(null);
+          // Set all the saved data
+          setChatSessions(savedSessions || []);
+          setFavorites(savedFavorites || []);
+          setFolders(savedFolders || {});
+
+          // If there was an active chat, restore it
+          if (savedActiveChatId) {
+            setActiveChatId(savedActiveChatId);
+            const activeChat = (savedSessions || []).find((chat: ChatSession) => chat.id === savedActiveChatId);
+            if (activeChat) {
+              setMessages(activeChat.messages);
             }
+          } else if (savedSessions && savedSessions.length > 0) {
+            // If no active chat but there are sessions, select the most recent one
+            const mostRecentChat = savedSessions[0];
+            setActiveChatId(mostRecentChat.id);
+            setMessages(mostRecentChat.messages);
           } else {
-            // No saved history, start fresh
+            // No chats exist, start fresh
             setMessages([]);
-            setChatSessions([]);
-            setFavorites([]);
-            setFolders({});
             setActiveChatId(null);
           }
         } else {
-          // No user logged in, clear everything
+          // No saved history service, start fresh
           setMessages([]);
           setChatSessions([]);
           setFavorites([]);
@@ -94,6 +88,8 @@ export const useChat = () => {
         }
       } catch (error) {
         console.error('Error loading chat history:', error);
+      } finally {
+        setIsInitialized(true);
       }
     };
 
@@ -104,23 +100,23 @@ export const useChat = () => {
   useEffect(() => {
     const saveChatHistory = () => {
       try {
-        if (user?.email) {
-          const storageKey = getStorageKey(user.email);
-          localStorage.setItem(storageKey, JSON.stringify({
-            messages,
-            chatSessions,
-            favorites,
-            folders,
-            activeChatId // Save the active chat ID
-          }));
-        }
+        const storageKey = getStorageKey(user?.email);
+        localStorage.setItem(storageKey, JSON.stringify({
+          messages,
+          chatSessions,
+          favorites,
+          folders,
+          activeChatId
+        }));
       } catch (error) {
         console.error('Error saving chat history:', error);
       }
     };
 
-    saveChatHistory();
-  }, [messages, chatSessions, favorites, folders, activeChatId, user?.email]);
+    if (isInitialized) {
+      saveChatHistory();
+    }
+  }, [messages, chatSessions, favorites, folders, activeChatId, user?.email, isInitialized]);
 
   // Update messages when activeChatId changes
   useEffect(() => {
@@ -133,46 +129,6 @@ export const useChat = () => {
       setMessages([]);
     }
   }, [activeChatId, chatSessions]);
-
-  // Clear chat history when user signs out
-  useEffect(() => {
-    if (!user) {
-      setMessages([]);
-      setChatSessions([]);
-      setFavorites([]);
-      setFolders({});
-      setActiveChatId(null);
-      setInput("");
-    }
-  }, [user]);
-
-  // Scroll to bottom when new messages are added
-  useEffect(() => {
-    if (messages.length > 0) {
-      const container = chatContainerRef.current;
-      if (container) {
-        const scrollHeight = container.scrollHeight;
-        const clientHeight = container.clientHeight;
-        const scrollTop = container.scrollTop;
-
-        // If we're near the bottom, scroll to bottom
-        if (scrollHeight - (scrollTop + clientHeight) < 200) {
-          scrollToBottom();
-        }
-      }
-    }
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        const messagesEnd = document.getElementById('messages-end');
-        messagesEnd?.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
-  };
 
   const handleNewChat = () => {
     const newChat: ChatSession = {
@@ -190,33 +146,50 @@ export const useChat = () => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
+    return newChat.id;
   };
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || isLoading) return;
 
+    const currentTimestamp = new Date().toISOString();
+    let currentChatId = activeChatId;
+
+    // If no active chat, create one
+    if (!currentChatId) {
+      const newChatId = Date.now().toString();
+      const newChat: ChatSession = {
+        id: newChatId,
+        title: message.slice(0, 30) + (message.length > 30 ? "..." : ""),
+        messages: [],
+        timestamp: currentTimestamp
+      };
+
+      setChatSessions(prev => [newChat, ...prev]);
+      setActiveChatId(newChatId);
+      currentChatId = newChatId;
+    }
+
     // Add user message to chat
     const userMessage: Message = {
       text: message,
       isAi: false,
-      timestamp: new Date().toISOString()
+      timestamp: currentTimestamp
     };
 
     // Update messages state
     setMessages(prev => [...prev, userMessage]);
 
-    // Update chat session if active
-    if (activeChatId) {
-      setChatSessions(prev => prev.map(chat =>
-        chat.id === activeChatId
-          ? {
-            ...chat,
-            messages: [...chat.messages, userMessage],
-            title: chat.title === "New Chat" ? message.slice(0, 30) + "..." : chat.title
-          }
-          : chat
-      ));
-    }
+    // Update chat session
+    setChatSessions(prev => prev.map(chat =>
+      chat.id === currentChatId
+        ? {
+          ...chat,
+          messages: [...chat.messages, userMessage],
+          title: chat.title === "New Chat" ? message.slice(0, 30) + (message.length > 30 ? "..." : "") : chat.title
+        }
+        : chat
+    ));
 
     setInput("");
     setIsLoading(true);
@@ -242,13 +215,11 @@ export const useChat = () => {
 
         setMessages(prev => [...prev, aiMessage]);
 
-        if (activeChatId) {
-          setChatSessions(prev => prev.map(chat =>
-            chat.id === activeChatId
-              ? { ...chat, messages: [...chat.messages, aiMessage] }
-              : chat
-          ));
-        }
+        setChatSessions(prev => prev.map(chat =>
+          chat.id === currentChatId
+            ? { ...chat, messages: [...chat.messages, aiMessage] }
+            : chat
+        ));
         return;
       }
 
@@ -269,14 +240,12 @@ export const useChat = () => {
       // Update messages state
       setMessages(prev => [...prev, aiMessage]);
 
-      // Update chat session if active
-      if (activeChatId) {
-        setChatSessions(prev => prev.map(chat =>
-          chat.id === activeChatId
-            ? { ...chat, messages: [...chat.messages, aiMessage] }
-            : chat
-        ));
-      }
+      // Update chat session
+      setChatSessions(prev => prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, messages: [...chat.messages, aiMessage] }
+          : chat
+      ));
 
     } catch (error) {
       console.error('Message error:', error);
@@ -294,14 +263,12 @@ export const useChat = () => {
       // Update messages state
       setMessages(prev => [...prev, errorMessage]);
 
-      // Update chat session if active
-      if (activeChatId) {
-        setChatSessions(prev => prev.map(chat =>
-          chat.id === activeChatId
-            ? { ...chat, messages: [...chat.messages, errorMessage] }
-            : chat
-        ));
-      }
+      // Update chat session
+      setChatSessions(prev => prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, messages: [...chat.messages, errorMessage] }
+          : chat
+      ));
 
       // Show a toast notification
       toast({
@@ -313,6 +280,8 @@ export const useChat = () => {
       setIsLoading(false);
     }
   };
+
+
 
   const onDeleteChat = (chatId: string) => {
     setChatSessions(prev => prev.filter(chat => chat.id !== chatId));
@@ -375,6 +344,7 @@ export const useChat = () => {
     onToggleFavorite,
     onMoveToFolder,
     onCreateFolder,
-    apiRequestFailed
+    apiRequestFailed,
+    isInitialized
   };
 };

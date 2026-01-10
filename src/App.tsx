@@ -29,6 +29,7 @@ const App = () => {
                 <Sonner />
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/chat/:chatId" element={<Index />} />
                   <Route path="/explore" element={<Explore />} />
                   <Route path="/editor" element={<CodeEditor />} />
                   <Route path="/404" element={<NotFound />} />

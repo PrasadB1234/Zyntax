@@ -9,8 +9,11 @@ import { useChat } from "@/hooks/use-chat";
 import { ActionType } from "@/types/action";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useParams, useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const { chatId } = useParams();
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const {
     messages,
@@ -33,7 +36,66 @@ const Index = () => {
     onCreateFolder,
     favorites,
     folders,
+    isInitialized,
   } = useChat();
+
+  // Sync URL with active chat
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (chatId) {
+      // Trying to access a specific chat
+      const chatExists = chatSessions.some(c => c.id === chatId);
+      if (chatExists) {
+        if (activeChatId !== chatId) {
+          setActiveChatId(chatId);
+        }
+      } else {
+        // Chat not found, redirect to home
+        navigate('/');
+      }
+    } else {
+      // Root URL
+      if (activeChatId) {
+        // If we have an active chat but we are at root, it means the chat was just created
+        // or we navigated here without clearing state. Redirect to the chat.
+        navigate(`/chat/${activeChatId}`);
+      }
+    }
+  }, [chatId, activeChatId, isInitialized, chatSessions, navigate, setActiveChatId]);
+
+  const handleChatSelect = (id: string | null) => {
+    setActiveChatId(id);
+    if (id) {
+      navigate(`/chat/${id}`);
+    } else {
+      navigate('/');
+    }
+  };
+
+  const handleNewChatWrapper = () => {
+    const newId = handleNewChat();
+    if (newId) {
+      navigate(`/chat/${newId}`);
+    }
+  };
+
+  // Add a dark class to the document body
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    return () => {
+      document.documentElement.classList.remove('dark');
+    };
+  }, []);
+
+  // Show loading or nothing while initializing to avoid flash of content
+  if (!isInitialized) {
+    return (
+      <div className="flex h-[100dvh] w-full bg-white dark:bg-[#121212] items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#8B5CF6] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   // Sample actions
   const allActions: ActionType[] = [
@@ -71,13 +133,6 @@ const Index = () => {
     }
   ];
 
-  // Add a dark class to the document body
-  useEffect(() => {
-    document.documentElement.classList.add('dark');
-    return () => {
-      document.documentElement.classList.remove('dark');
-    };
-  }, []);
 
   // Function to handle suggestion button clicks
   const handleSuggestionClick = (suggestion: string) => {
@@ -92,8 +147,8 @@ const Index = () => {
         setIsSidebarOpen={setIsSidebarOpen}
         chatSessions={chatSessions}
         activeChatId={activeChatId}
-        setActiveChatId={setActiveChatId}
-        handleNewChat={handleNewChat}
+        setActiveChatId={handleChatSelect}
+        handleNewChat={handleNewChatWrapper}
         allActions={allActions}
         handleSendMessage={handleSendMessage}
         onDeleteChat={onDeleteChat}
@@ -111,7 +166,7 @@ const Index = () => {
         <ChatHeader
           setIsSidebarOpen={setIsSidebarOpen}
           isSidebarOpen={isSidebarOpen}
-          handleNewChat={handleNewChat}
+          handleNewChat={handleNewChatWrapper}
         />
 
         {/* Chat Area */}

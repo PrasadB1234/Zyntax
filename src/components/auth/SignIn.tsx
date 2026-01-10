@@ -2,12 +2,14 @@ import { X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { motion } from 'framer-motion';
 import { WikipediaSearch } from '../wiki/WikipediaSearch';
+import { useUser } from '@/contexts/UserContext';
 
 interface SignInProps {
   onClose?: () => void;
 }
 
 export const SignIn = ({ onClose }: SignInProps) => {
+  const { setUser } = useUser();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -75,6 +77,15 @@ export const SignIn = ({ onClose }: SignInProps) => {
         >
           <Button
             variant="outline"
+            onClick={() => {
+              setUser({
+                id: 'local-user-1',
+                name: 'Local User',
+                email: 'user@local.app',
+                picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'
+              });
+              onClose?.();
+            }}
             className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white flex items-center justify-center gap-3 py-6 rounded-lg transition-transform hover:scale-[1.02] active:scale-[0.98] border-none"
           >
             <span className="font-medium text-lg">Sign Up</span>
@@ -94,6 +105,6 @@ export const SignIn = ({ onClose }: SignInProps) => {
           <a href="/privacy" className="text-[#8B5CF6] hover:text-[#7C3AED] transition-colors">Privacy Policy</a>
         </motion.p>
       </motion.div>
-    </motion.div>
+    </motion.div >
   );
 }; 

@@ -37,6 +37,7 @@ interface ChatContextType {
   createFolder: (folderName: string) => void;
   favorites: string[];
   folders: { [key: string]: string[] };
+  isInitialized: boolean;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -127,6 +128,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setChatSessions(prev => [newChat, ...prev]);
       setActiveChatId(newChatId);
       currentChatId = newChatId;
+      navigate(`/chat/${newChatId}`);
     }
 
     const userMessage: Message = {
@@ -241,6 +243,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setChatSessions(prev => [newChat, ...prev]);
     setActiveChatId(newChat.id);
+    navigate(`/chat/${newChat.id}`);
   };
 
   const deleteChat = (chatId: string) => {
@@ -248,6 +251,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (activeChatId === chatId) {
       setActiveChatId(null);
       setMessages([]);
+      navigate('/');
     }
     // Also remove from favorites and folders
     setFavorites(prev => prev.filter(id => id !== chatId));
@@ -320,7 +324,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       moveToFolder,
       createFolder,
       favorites,
-      folders
+      folders,
+      isInitialized
     }}>
       {children}
     </ChatContext.Provider>
