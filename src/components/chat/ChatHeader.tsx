@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useUser } from "@/contexts/UserContext";
 import { useChat } from "@/hooks/use-chat";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +41,10 @@ export const ChatHeader = ({
             <Button
               variant="ghost"
               size="icon"
-              className="mr-1 sm:mr-2 h-8 w-8 sm:h-9 sm:w-9 text-gray-300 hover:bg-[#8B5CF6]/10 hover:text-[#8B5CF6] lg:hidden flex-shrink-0"
+              className={cn(
+                "mr-1 sm:mr-2 h-8 w-8 sm:h-9 sm:w-9 text-gray-300 hover:bg-[#8B5CF6]/10 hover:text-[#8B5CF6] flex-shrink-0 transition-opacity duration-300",
+                isSidebarOpen ? "opacity-0 invisible w-0 p-0 mr-0" : "opacity-100 visible"
+              )}
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
               <Menu size={18} className="sm:w-5 sm:h-5" />

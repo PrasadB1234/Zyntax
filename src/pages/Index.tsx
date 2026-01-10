@@ -14,7 +14,7 @@ import { useParams, useNavigate } from "react-router-dom";
 const Index = () => {
   const { chatId } = useParams();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const {
     messages,
     isLoading,
