@@ -1,4 +1,4 @@
-import { Menu, Plus, Sparkles, LogOut, Search } from "lucide-react";
+import { Plus, Sparkles, LogOut, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -35,20 +35,12 @@ export const ChatHeader = ({
   return (
     <>
       <nav className="border-b border-[#2A2A2A] bg-[#1A1A1A] sticky top-0 z-30 w-full">
-        <div className="flex h-14 sm:h-16 items-center justify-between px-2 sm:px-4 max-w-screen-xl mx-auto">
-          {/* Left section with menu and logo */}
+        <div className={cn(
+          "flex h-14 sm:h-16 items-center px-2 sm:px-4 mx-auto transition-all duration-300",
+          isSidebarOpen ? "justify-between max-w-screen-xl" : "justify-between pl-4 lg:pl-[80px] pr-4"
+        )}>
+          {/* Left section with logo */}
           <div className="flex items-center flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "mr-1 sm:mr-2 h-8 w-8 sm:h-9 sm:w-9 text-gray-300 hover:bg-[#8B5CF6]/10 hover:text-[#8B5CF6] flex-shrink-0 transition-opacity duration-300",
-                isSidebarOpen ? "opacity-0 invisible w-0 p-0 mr-0" : "opacity-100 visible"
-              )}
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              <Menu size={18} className="sm:w-5 sm:h-5" />
-            </Button>
             <div className="flex items-center gap-1.5 sm:gap-3">
               <button
                 onClick={() => {

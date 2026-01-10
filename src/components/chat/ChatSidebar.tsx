@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Edit, MessageSquare, Plus, Trash2, Star, StarOff, Search, MoreVertical, FolderPlus, FolderOpen, Home, Compass, Users, Library, Monitor, PanelLeftClose } from "lucide-react";
+import { Edit, MessageSquare, Plus, Trash2, Star, StarOff, Search, MoreVertical, FolderPlus, FolderOpen, Home, Compass, Users, Library, Monitor, PanelLeftClose, PanelRight } from "lucide-react";
 
 
 import { Button } from "@/components/ui/button";
@@ -118,10 +118,85 @@ export const ChatSidebar = ({
           isSidebarOpen ? "translate-x-0" : "-translate-x-full",
           // Desktop: Reset translate, toggle using width
           "lg:translate-x-0",
-          isSidebarOpen ? "lg:w-[320px]" : "lg:w-0 lg:border-r-0"
+          isSidebarOpen ? "lg:w-[320px]" : "lg:w-[64px]"
         )}
       >
-        <div className="w-[280px] sm:w-[300px] md:w-[320px] h-full flex flex-col">
+        {/* Collapsed Sidebar with Navigation Icons - Only visible when sidebar is closed on desktop */}
+        {!isSidebarOpen && (
+          <div className="hidden lg:flex w-[64px] h-full flex-col border-r border-[#2A2A2A]">
+            {/* Header with expand icon */}
+            <div className="flex items-center justify-center p-2 border-b border-[#2A2A2A]">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 hover:bg-[#8B5CF6]/10 rounded-lg transition-all duration-300 text-gray-300 hover:text-[#8B5CF6]"
+                title="Show Chats"
+              >
+                <PanelRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Navigation Icons */}
+            <div className="flex flex-col gap-1 p-2 border-b border-[#2A2A2A]">
+              <button
+                onClick={() => {
+                  setActiveSection("home");
+                  setIsSidebarOpen(true);
+                }}
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300 text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10",
+                  activeSection === "home" && "text-[#8B5CF6] bg-[#8B5CF6]/10"
+                )}
+                title="Dashboard"
+              >
+                <Home className="w-5 h-5 mx-auto" />
+              </button>
+              <button
+                onClick={() => {
+                  setActiveSection("discover");
+                  setIsSidebarOpen(true);
+                }}
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300 text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10",
+                  activeSection === "discover" && "text-[#8B5CF6] bg-[#8B5CF6]/10"
+                )}
+                title="Explore AI"
+              >
+                <Compass className="w-5 h-5 mx-auto" />
+              </button>
+              <button
+                onClick={() => {
+                  setActiveSection("spaces");
+                  setIsSidebarOpen(true);
+                }}
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300 text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10",
+                  activeSection === "spaces" && "text-[#8B5CF6] bg-[#8B5CF6]/10"
+                )}
+                title="Team Workspace"
+              >
+                <Users className="w-5 h-5 mx-auto" />
+              </button>
+              <button
+                onClick={() => {
+                  setActiveSection("library");
+                  setIsSidebarOpen(true);
+                }}
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300 text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10",
+                  activeSection === "library" && "text-[#8B5CF6] bg-[#8B5CF6]/10"
+                )}
+                title="My Conversations"
+              >
+                <Library className="w-5 h-5 mx-auto" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className={cn(
+          "w-[280px] sm:w-[300px] md:w-[320px] h-full flex flex-col",
+          !isSidebarOpen && "lg:hidden"
+        )}>
           {/* New Chat Button */}
           <div className="flex items-center p-3 sm:p-4 border-b border-[#2A2A2A]">
             <h1 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-white to-[#8B5CF6] bg-clip-text text-transparent">Chats</h1>
