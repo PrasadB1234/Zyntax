@@ -402,15 +402,17 @@ export const ChatSidebar = ({
             </Button>
           </div>
         </div>
-      </div>
+      </div >
 
       {/* Mobile overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {
+        isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )
+      }
     </>
   );
 };
