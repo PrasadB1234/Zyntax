@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUp, Paperclip, Sparkles, Image as ImageIcon } from "lucide-react";
+import { ArrowUp, Paperclip, Sparkles, Image as ImageIcon, Palette } from "lucide-react";
 import { useState, FormEvent, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isImageMode, setIsImageMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -45,8 +46,9 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
     };
   }, [disabled]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement> | Event) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (!file) return;
 
     try {
@@ -86,14 +88,20 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if ((message.trim() || imageUrl) && !disabled) {
+      let finalMessage = message;
+      if (isImageMode && !message.trim().toLowerCase().startsWith('/image')) {
+        finalMessage = `/image ${message}`;
+      }
+
       if (imageUrl) {
-        onSendMessage(message, imageUrl);
+        onSendMessage(finalMessage, imageUrl);
       } else {
-        onSendMessage(message);
+        onSendMessage(finalMessage);
       }
       setMessage("");
       setImageUrl(null);
       setSelectedFile(null);
+      setIsImageMode(false);
     }
   };
 
@@ -104,9 +112,7 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
     input.multiple = false;
     input.style.display = 'none';
     input.onchange = (e) => {
-      if (e.target instanceof HTMLInputElement) {
-        handleImageUpload(e as React.ChangeEvent<HTMLInputElement>);
-      }
+      handleImageUpload(e);
     };
     input.click();
   };
@@ -131,10 +137,10 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
         <div className="mb-3 relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/10 to-[#8B5CF6]/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative">
-            <img 
-              src={imageUrl} 
-              alt="Uploaded" 
-              className="w-full max-h-32 object-cover rounded-xl border border-[#2A2A2A] transition-all duration-300 group-hover:border-[#8B5CF6]/30" 
+            <img
+              src={imageUrl}
+              alt="Uploaded"
+              className="w-full max-h-32 object-cover rounded-xl border border-[#2A2A2A] transition-all duration-300 group-hover:border-[#8B5CF6]/30"
             />
             <Button
               type="button"
@@ -155,12 +161,12 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
         </div>
       )}
 
-      <div className="relative flex items-center rounded-2xl border border-[#2A2A2A] bg-[#1A1A1A] shadow-lg transition-all duration-300 group-hover:border-gray-600 group-focus-within:border-[#8B5CF6]/50 group-focus-within:shadow-[#8B5CF6]/5 group-focus-within:scale-[1.02]">
+      <div className={`relative flex items-center rounded-2xl border bg-[#1A1A1A] shadow-lg transition-all duration-300 group-hover:border-gray-600 group-focus-within:border-[#8B5CF6]/50 group-focus-within:shadow-[#8B5CF6]/5 group-focus-within:scale-[1.02] ${isImageMode ? 'border-[#8B5CF6] shadow-[#8B5CF6]/20' : 'border-[#2A2A2A]'}`}>
         {/* Animated background glow */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/5 to-[#8B5CF6]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/5 to-[#8B5CF6]/0 transition-opacity duration-300 ${isImageMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
 
         {/* Action buttons with hover effects */}
-        <div className="absolute left-2 flex items-center gap-2 z-10">
+        <div className="absolute left-2 flex items-center gap-1 z-10">
           <Button
             type="button"
             size="icon"
@@ -172,6 +178,17 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/10 to-[#8B5CF6]/0 opacity-0 group-hover/clip:opacity-100 transition-opacity duration-300" />
             <ImageIcon className="h-5 w-5 transition-all duration-300 group-hover/clip:scale-110 group-hover/clip:text-[#8B5CF6] group-hover/clip:-rotate-12" />
           </Button>
+
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className={`relative h-10 w-10 rounded-full transition-all duration-300 group/palette ${isImageMode ? 'text-[#8B5CF6] bg-[#8B5CF6]/10' : 'text-gray-400 hover:bg-gray-700/30'}`}
+            onClick={() => setIsImageMode(!isImageMode)}
+          >
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/10 to-[#8B5CF6]/0 opacity-0 group-hover/palette:opacity-100 transition-opacity duration-300" />
+            <Palette className={`h-5 w-5 transition-all duration-300 group-hover/palette:scale-110 group-hover/palette:text-[#8B5CF6] group-hover/palette:rotate-12 ${isImageMode ? 'rotate-12' : ''}`} />
+          </Button>
         </div>
 
         {/* Enhanced input with focus effects */}
@@ -181,9 +198,9 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onPaste={handlePaste}
-          placeholder={selectedFile ? `Selected Image: ${selectedFile.name}` : "Ask anything..."}
+          placeholder={isImageMode ? "Describe the image you want to generate..." : (selectedFile ? `Selected Image: ${selectedFile.name}` : "Ask anything...")}
           disabled={disabled || isUploading}
-          className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-12 pr-4 py-4 text-sm sm:text-base text-gray-300 placeholder:text-gray-500 h-[52px]"
+          className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-[6.5rem] pr-4 py-4 text-sm sm:text-base text-gray-300 placeholder:text-gray-500 h-[52px]"
         />
 
         {/* Submit button with enhanced styling */}
@@ -198,11 +215,11 @@ export const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/10 to-[#8B5CF6]/0 opacity-0 group-hover/sparkles:opacity-100 transition-opacity duration-300" />
             <Sparkles className="h-5 w-5 transition-all duration-300 group-hover/sparkles:scale-110 group-hover/sparkles:text-[#8B5CF6] group-hover/sparkles:-rotate-12" />
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             size="icon"
             disabled={(!message.trim() && !imageUrl) || disabled || isUploading}
-            className="relative h-10 w-10 rounded-full bg-[#8B5CF6] hover:bg-[#8B5CF6]/90 transition-all duration-300 disabled:opacity-30 group/submit z-20 shadow-lg shadow-[#8B5CF6]/20"
+            className={`relative h-10 w-10 rounded-full transition-all duration-300 disabled:opacity-30 group/submit z-20 shadow-lg ${isImageMode ? 'bg-gradient-to-r from-pink-500 to-violet-600 hover:from-pink-600 hover:to-violet-700 shadow-violet-500/25' : 'bg-[#8B5CF6] hover:bg-[#8B5CF6]/90 shadow-[#8B5CF6]/20'}`}
             onClick={(e) => {
               e.stopPropagation();
             }}
