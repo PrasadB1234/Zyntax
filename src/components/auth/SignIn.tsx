@@ -5,13 +5,13 @@ import { WikipediaSearch } from '../wiki/WikipediaSearch';
 
 export const SignIn = () => {
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
     >
-      <motion.div 
-        initial={{ scale: 0.95, opacity: 0 }} 
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
         className="bg-gradient-to-b from-[#1A1A1A] to-[#0D0D0D] rounded-xl w-full max-w-[800px] p-8 relative shadow-2xl border border-[#2A2A2A]"
@@ -23,7 +23,7 @@ export const SignIn = () => {
 
         {/* Logo and Title */}
         <div className="flex flex-col items-center mb-6">
-          <motion.div 
+          <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
@@ -39,13 +39,13 @@ export const SignIn = () => {
               </svg>
             </div>
           </motion.div>
-          <motion.h2 
+          <motion.h2
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="text-3xl font-bold text-white mb-2"
           >
-            Welcome to <span className="text-[#8B5CF6]">MRILO AI</span>
+            Welcome to <span className="text-[#8B5CF6]">TejasGPT</span>
           </motion.h2>
         </div>
 
@@ -66,8 +66,8 @@ export const SignIn = () => {
           transition={{ delay: 0.8 }}
           className="space-y-4"
         >
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full bg-white hover:bg-gray-50 text-black flex items-center justify-center gap-3 py-6 rounded-lg transition-transform hover:scale-[1.02] active:scale-[0.98]"
           >
             <img src="/google-icon.svg" alt="Google" className="w-5 h-5" />
@@ -76,7 +76,7 @@ export const SignIn = () => {
         </motion.div>
 
         {/* Terms and Privacy */}
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9 }}

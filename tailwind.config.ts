@@ -1,5 +1,6 @@
-
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -92,11 +93,11 @@ export default {
       },
       keyframes: {
         'message-fade-in': {
-          '0%': { 
+          '0%': {
             opacity: '0',
             transform: 'translateY(10px)'
           },
-          '100%': { 
+          '100%': {
             opacity: '1',
             transform: 'translateY(0)'
           }
@@ -112,5 +113,5 @@ export default {
       }
     }
   },
-  plugins: [require("tailwindcss-animate"), require('@tailwindcss/typography')],
+  plugins: [tailwindcssAnimate, typography],
 } satisfies Config;

@@ -12,9 +12,10 @@ interface MessageContainerProps {
   isAi: boolean;
   sources?: Source[];
   codeBlocks?: { language: string; code: string; }[];
+  imageUrl?: string;
 }
 
-export const MessageContainer = ({ message, isAi, sources = [], codeBlocks }: MessageContainerProps) => {
+export const MessageContainer = ({ message, isAi, sources = [], codeBlocks, imageUrl }: MessageContainerProps) => {
   // Check if the message contains code or has code blocks
   const hasCode = message.includes('```') || (codeBlocks && codeBlocks.length > 0);
 
@@ -28,26 +29,26 @@ export const MessageContainer = ({ message, isAi, sources = [], codeBlocks }: Me
         "max-w-[98%] xs:max-w-[95%] sm:max-w-[90%] w-full relative group",
         isAi ? "rounded-tl-sm" : "rounded-tr-sm",
         !hasCode && "px-3 py-2.5 sm:px-4 sm:py-3 rounded-2xl",
-        !hasCode && (isAi 
-          ? "bg-[#1A1A1A] text-white hover:bg-[#1E1E1E] transition-colors duration-300" 
+        !hasCode && (isAi
+          ? "bg-[#1A1A1A] text-white hover:bg-[#1E1E1E] transition-colors duration-300"
           : "bg-[#8B5CF6]/10 text-white hover:bg-[#8B5CF6]/15 transition-colors duration-300"
         ),
         "shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-[#8B5CF6]/5"
       )}
     >
       {/* Enhanced glow effects */}
-      <motion.div 
+      <motion.div
         variants={glowVariants}
         className={cn(
           "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-xl",
-          isAi 
-            ? "bg-gradient-to-r from-[#2A2A2A]/0 via-[#2A2A2A]/50 to-[#2A2A2A]/0" 
+          isAi
+            ? "bg-gradient-to-r from-[#2A2A2A]/0 via-[#2A2A2A]/50 to-[#2A2A2A]/0"
             : "bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/10 to-[#8B5CF6]/0"
-        )} 
+        )}
       />
-      
+
       {/* Radial glow effect */}
-      <motion.div 
+      <motion.div
         className={cn(
           "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
           isAi
@@ -61,13 +62,13 @@ export const MessageContainer = ({ message, isAi, sources = [], codeBlocks }: Me
         {hasCode ? (
           <CodeMessageContent message={message} codeBlocks={codeBlocks} />
         ) : (
-          <motion.div 
+          <motion.div
             className="w-full"
             whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.2 }}
           >
             {isAi ? (
-              <AiMessageContent message={message} sources={sources} />
+              <AiMessageContent message={message} sources={sources} imageUrl={imageUrl} />
             ) : (
               <UserMessageContent message={message} />
             )}

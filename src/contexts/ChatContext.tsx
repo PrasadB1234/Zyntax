@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { callAeroApi } from '../services/aeroService';
 
 interface Message {
   id: string;
@@ -12,6 +11,7 @@ interface Message {
     language: string;
     code: string;
   }>;
+  imageUrl?: string;
 }
 
 interface ChatSession {
@@ -19,6 +19,8 @@ interface ChatSession {
   title: string;
   messages: Message[];
   timestamp: string;
+  folderId?: string;
+  isFavorite?: boolean;
 }
 
 interface ChatContextType {
@@ -41,64 +43,90 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  // Using a hardcoded user ID for local storage key to simulate a user
+  const LOCAL_STORAGE_KEY = 'mrilo_chat_data_v1';
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [folders, setFolders] = useState<{ [key: string]: string[] }>({});
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Load data from localStorage on mount
   useEffect(() => {
-    if (user) {
-      fetchChatHistory();
-    }
-  }, [user]);
+    const loadData = () => {
+      try {
+        const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setChatSessions(parsedData.chatSessions || []);
+          setFavorites(parsedData.favorites || []);
+          setFolders(parsedData.folders || {});
 
-  const fetchChatHistory = async () => {
-    try {
-      const { data: chats, error } = await supabase
-        .from('chats')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Convert database chats to ChatSession format
-      const formattedChats: ChatSession[] = chats.map(chat => ({
-        id: chat.id,
-        title: chat.title || 'New Chat',
-        messages: chat.messages || [],
-        timestamp: chat.created_at
-      }));
-
-      setChatSessions(formattedChats);
-
-      // If there's an active chat, load its messages
-      if (activeChatId) {
-        const activeChat = formattedChats.find(chat => chat.id === activeChatId);
-        if (activeChat) {
-          setMessages(activeChat.messages);
+          if (parsedData.activeChatId) {
+            setActiveChatId(parsedData.activeChatId);
+            const activeSession = (parsedData.chatSessions || []).find((s: ChatSession) => s.id === parsedData.activeChatId);
+            if (activeSession) {
+              setMessages(activeSession.messages);
+            }
+          }
         }
+      } catch (error) {
+        console.error('Error loading chat history from local storage:', error);
+      } finally {
+        setIsInitialized(true);
       }
+    };
+    loadData();
+  }, []);
+
+  // Save data to localStorage whenever state changes
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    try {
+      const dataToSave = {
+        chatSessions,
+        favorites,
+        folders,
+        activeChatId
+      };
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (error) {
-      console.error('Error fetching chat history:', error);
+      console.error('Error saving chat history to local storage:', error);
     }
-  };
+  }, [chatSessions, favorites, folders, activeChatId, isInitialized]);
+
+  // Update messages when active chat changes
+  useEffect(() => {
+    if (!activeChatId) {
+      setMessages([]);
+      return;
+    }
+    const chat = chatSessions.find(c => c.id === activeChatId);
+    if (chat) {
+      setMessages(chat.messages);
+    }
+  }, [activeChatId, chatSessions]); // Added chatSessions to dependency array
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) return;
 
+    let currentChatId = activeChatId;
+
     // Create a new chat if there isn't an active one
-    if (!activeChatId) {
+    if (!currentChatId) {
+      const newChatId = crypto.randomUUID();
       const newChat: ChatSession = {
-        id: crypto.randomUUID(),
+        id: newChatId,
         title: message.slice(0, 30) + '...',
         messages: [],
         timestamp: new Date().toISOString()
       };
       setChatSessions(prev => [newChat, ...prev]);
-      setActiveChatId(newChat.id);
+      setActiveChatId(newChatId);
+      currentChatId = newChatId;
     }
 
     const userMessage: Message = {
@@ -108,8 +136,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       timestamp: new Date().toISOString()
     };
 
-    // Add user message immediately
+    // Update messages for the UI immediately
     setMessages(prev => [...prev, userMessage]);
+
+    // Update session state
+    setChatSessions(prev => prev.map(chat =>
+      chat.id === currentChatId
+        ? { ...chat, messages: [...chat.messages, userMessage], title: chat.messages.length === 0 ? message.slice(0, 30) + '...' : chat.title }
+        : chat
+    ));
 
     // Show typing indicator
     const typingMessage: Message = {
@@ -122,55 +157,49 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setMessages(prev => [...prev, typingMessage]);
 
     try {
-      // Call chat API through Supabase Edge Function with retry logic
-      let response;
-      let retries = 3;
+      // Determine if it's an image request
+      const isImageRequest = message.trim().toLowerCase().startsWith('/image');
+      const prompt = isImageRequest ? message.substring(6).trim() : message;
 
-      while (retries > 0) {
-        try {
-          const { data, error } = await supabase.functions.invoke('chat', {
-            body: { 
-              message: message,
-              userId: user?.id,
-              system_prompt: `You are an AI Assistant experienced in React Development. You MUST follow these guidelines for EVERY response:
+      const apiResponse = await callAeroApi(prompt, isImageRequest);
 
-1. Start by clearly stating what specific React component, feature, or concept you are discussing
-2. Keep your response under 15 lines total
-3. Do not include any code examples
-4. Do not include any technical commentary or explanations
-5. Focus only on what is being built and its key features
-6. Use simple, direct language
+      // Handle the case where the LLM suggests an image generation
+      if (!isImageRequest && apiResponse.text && apiResponse.text.trim().toLowerCase().startsWith('/image')) {
+        const imageDescription = apiResponse.text.substring(apiResponse.text.toLowerCase().indexOf('/image') + 6).trim();
+        const imageResponse = await callAeroApi(imageDescription, true);
 
-Example format:
-"I am discussing [React Component/Feature].
-This [component/feature] is used for [main purpose].
-It includes these key features:
-- Feature 1
-- Feature 2
-- Feature 3"
+        const aiMessage: Message = {
+          id: crypto.randomUUID(),
+          text: "",
+          isAi: true,
+          timestamp: new Date().toISOString(),
+          imageUrl: imageResponse.imageUrl
+        };
 
-Remember: Be concise and direct. No code. No technical details.`
-            }
-          });
+        // Update messages: remove typing, add AI message
+        setMessages(prev => {
+          const filtered = prev.filter(msg => msg.id !== typingMessage.id);
+          return [...filtered, aiMessage];
+        });
 
-          if (error) throw error;
-          if (!data || !data.response) throw new Error('No response received');
-
-          response = data.response;
-          break;
-        } catch (e) {
-          retries--;
-          if (retries === 0) throw e;
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
-        }
+        // Update session state
+        setChatSessions(prev => prev.map(chat =>
+          chat.id === currentChatId
+            ? { ...chat, messages: [...chat.messages, aiMessage] } // Ensure we append correctly based on latest state if needed, but strict ordering here matches UI flow
+            : chat
+        ));
+        return;
       }
+
+      if (apiResponse.status === 'error') throw new Error(apiResponse.error);
 
       // Remove typing indicator and add AI response
       const aiMessage: Message = {
         id: crypto.randomUUID(),
-        text: response,
+        text: apiResponse.text || "",
         isAi: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        imageUrl: apiResponse.imageUrl
       };
 
       // Update messages state
@@ -179,41 +208,22 @@ Remember: Be concise and direct. No code. No technical details.`
         return [...filtered, aiMessage];
       });
 
-      // Save chat to database if user is logged in
-      if (user && activeChatId) {
-        const updatedMessages = messages.filter(msg => msg.id !== typingMessage.id);
-        updatedMessages.push(userMessage, aiMessage);
+      // Update session state
+      setChatSessions(prev => prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, messages: [...chat.messages, aiMessage] }
+          : chat
+      ));
 
-        const { error: saveError } = await supabase
-          .from('chats')
-          .upsert({
-            id: activeChatId,
-            user_id: user.id,
-            title: message.slice(0, 30) + '...',
-            messages: updatedMessages,
-            updated_at: new Date().toISOString()
-          });
-
-        if (saveError) {
-          console.error('Error saving chat:', saveError);
-        }
-
-        // Update chat sessions
-        setChatSessions(prev => prev.map(chat => 
-          chat.id === activeChatId 
-            ? { ...chat, messages: updatedMessages, title: message.slice(0, 30) + '...' }
-            : chat
-        ));
-      }
     } catch (error) {
       console.error('Error sending message:', error);
-      
+
       // Remove typing indicator and show error message
       setMessages(prev => {
         const filtered = prev.filter(msg => msg.id !== typingMessage.id);
         return [...filtered, {
           id: crypto.randomUUID(),
-          text: "All AI services are currently unavailable. Please try again later.",
+          text: "All AI services are currently unavailable. Please check your connection.",
           isAi: true,
           timestamp: new Date().toISOString()
         }];
@@ -223,87 +233,70 @@ Remember: Be concise and direct. No code. No technical details.`
 
   const createNewChat = () => {
     setMessages([]); // Clear messages immediately
-    const newChat = {
+    const newChat: ChatSession = {
       id: crypto.randomUUID(),
       title: 'New Chat',
       messages: [],
-      createdAt: new Date()
+      timestamp: new Date().toISOString()
     };
     setChatSessions(prev => [newChat, ...prev]);
     setActiveChatId(newChat.id);
   };
 
-  const deleteChat = async (chatId: string) => {
-    try {
-      const { error } = await supabase
-        .from('chats')
-        .delete()
-        .eq('id', chatId);
-
-      if (error) throw error;
-
-      setChatSessions(prev => prev.filter(chat => chat.id !== chatId));
-      if (activeChatId === chatId) {
-        setActiveChatId(null);
-      }
-    } catch (error) {
-      console.error('Error deleting chat:', error);
+  const deleteChat = (chatId: string) => {
+    setChatSessions(prev => prev.filter(chat => chat.id !== chatId));
+    if (activeChatId === chatId) {
+      setActiveChatId(null);
+      setMessages([]);
     }
+    // Also remove from favorites and folders
+    setFavorites(prev => prev.filter(id => id !== chatId));
+    setFolders(prev => {
+      const newFolders = { ...prev };
+      Object.keys(newFolders).forEach(key => {
+        newFolders[key] = newFolders[key].filter(id => id !== chatId);
+      });
+      return newFolders;
+    });
   };
 
-  const renameChat = async (chatId: string, newTitle: string) => {
-    try {
-      const { error } = await supabase
-        .from('chats')
-        .update({ title: newTitle })
-        .eq('id', chatId);
-
-      if (error) throw error;
-
-      setChatSessions(prev => prev.map(chat => 
-        chat.id === chatId ? { ...chat, title: newTitle } : chat
-      ));
-    } catch (error) {
-      console.error('Error renaming chat:', error);
-    }
+  const renameChat = (chatId: string, newTitle: string) => {
+    setChatSessions(prev => prev.map(chat =>
+      chat.id === chatId ? { ...chat, title: newTitle } : chat
+    ));
   };
 
   const toggleFavorite = (chatId: string) => {
-    setFavorites(prev => 
-      prev.includes(chatId) 
+    setFavorites(prev =>
+      prev.includes(chatId)
         ? prev.filter(id => id !== chatId)
         : [...prev, chatId]
     );
   };
 
-  const moveToFolder = async (chatId: string, folderName: string) => {
-    try {
-      const { error } = await supabase
-        .from('chats')
-        .update({ folder_id: folderName })
-        .eq('id', chatId);
-
-      if (error) throw error;
-
-      setFolders(prev => {
-        const newFolders = { ...prev };
-        // Remove from old folder
-        Object.keys(newFolders).forEach(folderId => {
-          newFolders[folderId] = newFolders[folderId].filter(chat => chat.id !== chatId);
-        });
-        // Add to new folder
-        if (!newFolders[folderName]) {
-          newFolders[folderName] = [];
-        }
-        const chat = chatSessions.find(c => c.id === chatId);
-        if (chat) {
-          newFolders[folderName].push(chat);
-        }
-        return newFolders;
+  const moveToFolder = (chatId: string, folderName: string) => {
+    setFolders(prev => {
+      const newFolders = { ...prev };
+      // Remove from old folder
+      Object.keys(newFolders).forEach(folderId => {
+        newFolders[folderId] = newFolders[folderId].filter(id => id !== chatId);
       });
-    } catch (error) {
-      console.error('Error moving chat to folder:', error);
-    }
+      // Add to new folder
+      if (!newFolders[folderName]) {
+        newFolders[folderName] = [];
+      }
+
+      // Check if chat exists before adding
+      if (chatSessions.some(c => c.id === chatId)) {
+        newFolders[folderName].push(chatId);
+      }
+      return newFolders;
+    });
+
+    // Update local chat session state if we were tracking folderId there (optional depending on how ChatSession is used)
+    setChatSessions(prev => prev.map(chat =>
+      chat.id === chatId ? { ...chat, folderId: folderName } : chat
+    ));
   };
 
   const createFolder = (folderName: string) => {

@@ -9,9 +9,10 @@ interface ChatMessageProps {
   isAi: boolean;
   isLatest?: boolean;
   sources?: Source[];
+  imageUrl?: string;
 }
 
-export const ChatMessage = memo(({ message, isAi, isLatest, sources = [] }: ChatMessageProps) => {
+export const ChatMessage = memo(({ message, isAi, isLatest, sources = [], imageUrl }: ChatMessageProps) => {
   return (
     <div
       className={cn(
@@ -19,10 +20,11 @@ export const ChatMessage = memo(({ message, isAi, isLatest, sources = [] }: Chat
         isAi ? "justify-start" : "justify-end"
       )}
     >
-      <MessageContainer 
-        message={message} 
-        isAi={isAi} 
-        sources={sources} 
+      <MessageContainer
+        message={message}
+        isAi={isAi}
+        sources={sources}
+        imageUrl={imageUrl}
       />
     </div>
   );

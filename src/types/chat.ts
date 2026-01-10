@@ -17,6 +17,7 @@ export interface Message {
   sources?: Source[];
   timestamp: string;
   codeBlocks?: CodeBlock[];
+  imageUrl?: string;
 }
 
 export interface ChatSession {

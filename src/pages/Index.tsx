@@ -49,7 +49,7 @@ const Index = () => {
       id: "2",
       label: "Summarize",
       icon: <BarChart2 className="h-4 w-4 text-orange-500" />,
-      description: "mrilo",
+      description: "TejasGPT",
       short: "⌘cmd+p",
       end: "Command",
     },
@@ -116,7 +116,7 @@ const Index = () => {
 
         {/* Chat Area */}
         <div className="flex-1 relative overflow-hidden">
-          <div 
+          <div
             ref={chatContainerRef}
             className="absolute inset-0 overflow-y-auto scrollbar-thin pb-32"
           >
@@ -126,7 +126,7 @@ const Index = () => {
                   <div className="max-w-3xl w-full mx-auto flex flex-col items-center">
                     {/* Animated gradient background */}
                     <div className="absolute inset-0 bg-gradient-to-b from-[#8B5CF6]/5 via-transparent to-transparent animate-pulse" />
-                    
+
                     {/* Main content */}
                     <div className="relative">
                       <h2 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-gray-900 via-[#8B5CF6] to-gray-900 dark:from-white dark:via-[#8B5CF6] dark:to-white bg-clip-text text-transparent mt-10 mb-3 fade-in-animation animate-gradient">
@@ -199,8 +199,8 @@ const Index = () => {
               <div className="max-w-2xl mx-auto relative group">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-[#8B5CF6]/0 via-[#8B5CF6]/30 to-[#8B5CF6]/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity animate-gradient" />
                 <div className="relative">
-                  <ChatInput 
-                    onSendMessage={handleSendMessage} 
+                  <ChatInput
+                    onSendMessage={handleSendMessage}
                     disabled={isLoading}
                   />
                 </div>

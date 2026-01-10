@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cookies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full p-8 bg-gray-800 rounded-lg shadow-xl text-center">
+        <h1 class="text-2xl font-bold mb-4">Cookie Cleaner</h1>
+        <p class="text-gray-300 mb-6">Click the button below to clear all cookies for this domain. This should fix the
+            "431 Request Header Fields Too Large" error.</p>
+
+        <button onclick="clearCookies()"
+            class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-6 rounded transition-colors duration-200">
+            Clear Cookies
+        </button>
+
+        <div id="status" class="mt-4 text-sm hidden"></div>
+        <p class="mt-8 text-xs text-gray-500">After clearing, try accessing <a href="/"
+                class="underline text-blue-400">the main page</a> again.</p>
+    </div>
+
+    <script>
+        function clearCookies() {
+            const statusFn = document.getElementById('status');
+            let count = 0;
+            const cookies = document.cookie.split(";");
+
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+
+                // Try clearing with different path/domain combinations to be thorough
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=" + window.location.hostname;
+                count++;
+            }
+
+            statusFn.textContent = `Cleared ${count} cookies (tried). Access the app now!`;
+            statusFn.classList.remove('hidden');
+            statusFn.classList.add('text-green-400');
+
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        }
+
+        // Auto-clear if ?auto=true is passed
+        if (new URLSearchParams(window.location.search).get('auto') === 'true') {
+            clearCookies();
+        }
+    </script>
+</body>
+
+</html>

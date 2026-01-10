@@ -49,11 +49,11 @@ export const ChatHeader = ({
               >
                 <img 
                   src="/logo.svg" 
-                  alt="MRILO" 
+                  alt="TejasGPT" 
                   className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10"
                 />
                 <span className="font-semibold text-sm sm:text-base md:text-lg tracking-wide bg-gradient-to-r from-white to-[#8B5CF6] bg-clip-text text-transparent whitespace-nowrap">
-                  MRILO AI
+                  TejasGPT
                 </span>
               </button>
             </div>

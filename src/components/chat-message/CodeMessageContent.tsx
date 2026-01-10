@@ -4,14 +4,15 @@ import { CodeBlock } from "@/components/CodeBlock";
 interface CodeMessageContentProps {
   message: string;
   codeBlocks?: { language: string; code: string; }[];
+  imageUrl?: string;
 }
 
-export const CodeMessageContent = ({ message, codeBlocks }: CodeMessageContentProps) => {
+export const CodeMessageContent = ({ message, codeBlocks, imageUrl }: CodeMessageContentProps) => {
   // Extract code from message if it exists
   const parseCodeBlock = (message: string) => {
     const codeMatch = message.match(/```(\w*)\n([\s\S]*?)```/);
     if (!codeMatch) return null;
-    
+
     return {
       language: codeMatch[1] || 'typescript',
       code: codeMatch[2].trim()
@@ -23,11 +24,11 @@ export const CodeMessageContent = ({ message, codeBlocks }: CodeMessageContentPr
     const parts = [];
     let lastIndex = 0;
     let partIndex = 0;
-    
+
     // Find all code blocks
     const regex = /```(\w*)\n([\s\S]*?)```/g;
     let match;
-    
+
     while ((match = regex.exec(message)) !== null) {
       // Add text before code block
       if (match.index > lastIndex) {
@@ -39,21 +40,21 @@ export const CodeMessageContent = ({ message, codeBlocks }: CodeMessageContentPr
           partIndex++;
         }
       }
-      
+
       // Add code block
       parts.push(
         <div key={`code-${partIndex}`} className="w-full mb-3 -mx-2 sm:mx-0 overflow-hidden">
-          <CodeBlock 
+          <CodeBlock
             code={match[2].trim()}
             language={match[1] || 'typescript'}
           />
         </div>
       );
       partIndex++;
-      
+
       lastIndex = match.index + match[0].length;
     }
-    
+
     // Add remaining text after last code block
     if (lastIndex < message.length) {
       const textPart = message.substring(lastIndex).trim();
@@ -63,7 +64,7 @@ export const CodeMessageContent = ({ message, codeBlocks }: CodeMessageContentPr
         );
       }
     }
-    
+
     return parts;
   };
 
@@ -73,7 +74,7 @@ export const CodeMessageContent = ({ message, codeBlocks }: CodeMessageContentPr
       <div className="w-full space-y-2">
         {codeBlocks.map((block, index) => (
           <div key={index} className="w-full mb-3 -mx-2 sm:mx-0 overflow-hidden">
-            <CodeBlock 
+            <CodeBlock
               code={block.code}
               language={block.language}
             />
@@ -89,7 +90,7 @@ export const CodeMessageContent = ({ message, codeBlocks }: CodeMessageContentPr
   if (codeBlock && !message.includes('```', message.indexOf('```') + 3)) {
     return (
       <div className="w-full space-y-2">
-        <CodeBlock 
+        <CodeBlock
           code={codeBlock.code}
           language={codeBlock.language}
         />
@@ -99,6 +100,11 @@ export const CodeMessageContent = ({ message, codeBlocks }: CodeMessageContentPr
     return (
       <div className="w-full space-y-2">
         {renderComplexMessage(message)}
+        {imageUrl && (
+          <div className="mt-4">
+            <img src={imageUrl} alt="Generated" className="max-w-full h-auto rounded-lg" />
+          </div>
+        )}
       </div>
     );
   }

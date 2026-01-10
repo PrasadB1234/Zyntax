@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, MessageSquare, Trash2, ChevronRight, Plus, Trash } from 'lucide-react';
+import { Folder, MessageSquare, Trash2, ChevronRight } from 'lucide-react';
 import { useChat } from '@/contexts/ChatContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/contexts/UserContext';
+// Supabase import removed
 
 interface ChatFolder {
   id: string;
@@ -20,79 +20,86 @@ interface Chat {
   folderId: string;
 }
 
+interface DbChat {
+  id: string;
+  title: string | null;
+  last_message: string | null;
+  created_at: string;
+  folder_id: string | null;
+  user_id: string;
+}
+
 export const ChatHistory = () => {
-  const { currentChat, setCurrentChat, setChatHistory } = useChat();
-  const { user } = useAuth();
+  const { chatSessions, activeChatId, setActiveChatId, deleteChat, folders: contextFolders, createNewChat } = useChat(); // Added deleteChat and others
+  const { user } = useUser();
   const [folders, setFolders] = useState<ChatFolder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // No loading state needed really
+
+  const currentChat = chatSessions.find(c => c.id === activeChatId) || null;
+  const setCurrentChat = (chat: Chat | null) => setActiveChatId(chat ? chat.id : null);
 
   useEffect(() => {
-    if (user) {
-      fetchChatHistory();
-    }
-  }, [user]);
+    // Map context data to ChatHistory UI structure
+    const allChats: Chat[] = chatSessions.map(session => ({
+      id: session.id,
+      title: session.title,
+      lastMessage: session.messages[session.messages.length - 1]?.text || '',
+      timestamp: session.timestamp,
+      folderId: session.folderId || 'default'
+    }));
 
-  const fetchChatHistory = async () => {
-    try {
-      const { data: chats, error } = await supabase
-        .from('chats')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+    // Group by folders
+    // Use contextFolders to determine which chats are in which folder
 
-      if (error) throw error;
+    // Default folder (All Chats - or those not in specific folders)
+    // Actually, ChatContext folders structure is { folderName: [chatIds] }
+    // But ChatHistory expects a list of Folder objects with chats inside.
 
-      // Group chats by folder
-      const groupedChats = chats.reduce((acc: { [key: string]: Chat[] }, chat) => {
-        const folderId = chat.folder_id || 'default';
-        if (!acc[folderId]) {
-          acc[folderId] = [];
-        }
-        acc[folderId].push({
-          id: chat.id,
-          title: chat.title || 'New Chat',
-          lastMessage: chat.last_message || '',
-          timestamp: chat.created_at,
-          folderId: folderId
-        });
-        return acc;
-      }, {});
+    // For simplicity in this transition, let's just group everything into "All Chats" or map if folders exist.
+    // The previous implementation inferred folderId from the chat object. 
+    // My updated ChatContext supports folderId in ChatSession.
 
-      // Create folder structure
-      const folderStructure = Object.entries(groupedChats).map(([folderId, chats]) => ({
-        id: folderId,
-        name: folderId === 'default' ? 'All Chats' : 'Custom Folder',
-        chats,
-        isExpanded: true
-      }));
+    const groupedChats: { [key: string]: Chat[] } = {};
 
-      setFolders(folderStructure);
-    } catch (error) {
-      console.error('Error fetching chat history:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Initialize with default
+    groupedChats['default'] = [];
 
-  const handleClearHistory = async () => {
-    if (!user) return;
+    allChats.forEach(chat => {
+      const folderId = chat.folderId || 'default';
+      if (!groupedChats[folderId]) {
+        groupedChats[folderId] = [];
+      }
+      groupedChats[folderId].push(chat);
+    });
 
-    try {
-      // Delete all chats from Supabase
-      const { error } = await supabase
-        .from('chats')
-        .delete()
-        .eq('user_id', user.id);
+    // Also consider empty folders from context if we want to show them
+    Object.keys(contextFolders).forEach(folderName => {
+      if (!groupedChats[folderName]) {
+        groupedChats[folderName] = [];
+      }
+    });
 
-      if (error) throw error;
+    const folderStructure: ChatFolder[] = Object.entries(groupedChats).map(([folderId, chats]) => ({
+      id: folderId,
+      name: folderId === 'default' ? 'All Chats' : folderId, // Using folderId as name for now
+      chats: chats.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      isExpanded: true
+    }));
 
-      // Clear local state
-      setFolders([]);
-      setChatHistory([]);
-      setCurrentChat(null);
-    } catch (error) {
-      console.error('Error clearing chat history:', error);
-    }
+    setFolders(folderStructure);
+
+  }, [chatSessions, contextFolders]); // Re-run when context data changes
+
+  const handleClearHistory = () => {
+    // Logic to clear history -> basically delete all chats
+    // We can add a clearAllChats to context or just iterate and delete
+    // For now, let's just use createNewChat which effectively resets the view if we were only viewing one, 
+    // but to clear all history we need a context method.
+    // Since I didn't add clearAll to context, I'll skip it or implementing it would require context update.
+    // I'll just clear local folders state for visual effect or loop delete.
+    // Let's iterate delete for now as a quick fix, or better, add clearAll to context in next step if needed.
+    // Actually, user wants "wipe out", so maybe manually deleting is fine.
+    chatSessions.forEach(c => deleteChat(c.id));
   };
 
   const handleChatClick = (chat: Chat) => {
@@ -100,8 +107,8 @@ export const ChatHistory = () => {
   };
 
   const toggleFolder = (folderId: string) => {
-    setFolders(folders.map(folder => 
-      folder.id === folderId 
+    setFolders(folders.map(folder =>
+      folder.id === folderId
         ? { ...folder, isExpanded: !folder.isExpanded }
         : folder
     ));
@@ -145,9 +152,8 @@ export const ChatHistory = () => {
                 <Folder className="w-5 h-5 text-[#8B5CF6] mr-2" />
                 <span className="flex-1 text-left text-white">{folder.name}</span>
                 <ChevronRight
-                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                    folder.isExpanded ? 'rotate-90' : ''
-                  }`}
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${folder.isExpanded ? 'rotate-90' : ''
+                    }`}
                 />
               </button>
 
@@ -166,11 +172,10 @@ export const ChatHistory = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -10 }}
                         onClick={() => handleChatClick(chat)}
-                        className={`flex items-center w-full p-2 rounded-lg transition-colors duration-200 ${
-                          currentChat?.id === chat.id
-                            ? 'bg-[#8B5CF6]/20 text-white'
-                            : 'hover:bg-[#2A2A2A] text-gray-400 hover:text-white'
-                        }`}
+                        className={`flex items-center w-full p-2 rounded-lg transition-colors duration-200 ${currentChat?.id === chat.id
+                          ? 'bg-[#8B5CF6]/20 text-white'
+                          : 'hover:bg-[#2A2A2A] text-gray-400 hover:text-white'
+                          }`}
                       >
                         <MessageSquare className="w-4 h-4 mr-2" />
                         <span className="flex-1 text-left truncate">{chat.title}</span>

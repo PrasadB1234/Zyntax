@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { ChatSession, Message, CodeBlock } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
+import { callAeroApi } from "@/services/aeroService";
 
 export const useChat = () => {
   const { user } = useUser();
@@ -46,19 +46,19 @@ export const useChat = () => {
           const storageKey = getStorageKey(user.email);
           const savedHistory = localStorage.getItem(storageKey);
           if (savedHistory) {
-            const { 
-              messages: savedMessages, 
-              chatSessions: savedSessions, 
-              favorites: savedFavorites, 
+            const {
+              messages: savedMessages,
+              chatSessions: savedSessions,
+              favorites: savedFavorites,
               folders: savedFolders,
-              activeChatId: savedActiveChatId 
+              activeChatId: savedActiveChatId
             } = JSON.parse(savedHistory);
 
             // Set all the saved data
             setChatSessions(savedSessions || []);
             setFavorites(savedFavorites || []);
             setFolders(savedFolders || {});
-            
+
             // If there was an active chat, restore it
             if (savedActiveChatId) {
               setActiveChatId(savedActiveChatId);
@@ -154,7 +154,7 @@ export const useChat = () => {
         const scrollHeight = container.scrollHeight;
         const clientHeight = container.clientHeight;
         const scrollTop = container.scrollTop;
-        
+
         // If we're near the bottom, scroll to bottom
         if (scrollHeight - (scrollTop + clientHeight) < 200) {
           scrollToBottom();
@@ -181,12 +181,12 @@ export const useChat = () => {
       messages: [],
       timestamp: new Date().toISOString()
     };
-    
+
     setChatSessions(prev => [newChat, ...prev]);
     setActiveChatId(newChat.id);
     setMessages([]);
     setInput("");
-    
+
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -207,13 +207,13 @@ export const useChat = () => {
 
     // Update chat session if active
     if (activeChatId) {
-      setChatSessions(prev => prev.map(chat => 
-        chat.id === activeChatId 
-          ? { 
-              ...chat, 
-              messages: [...chat.messages, userMessage],
-              title: chat.title === "New Chat" ? message.slice(0, 30) + "..." : chat.title
-            }
+      setChatSessions(prev => prev.map(chat =>
+        chat.id === activeChatId
+          ? {
+            ...chat,
+            messages: [...chat.messages, userMessage],
+            title: chat.title === "New Chat" ? message.slice(0, 30) + "..." : chat.title
+          }
           : chat
       ));
     }
@@ -222,137 +222,48 @@ export const useChat = () => {
     setIsLoading(true);
 
     try {
-      // Check if user has Gemini API key
-      const geminiApiKey = localStorage.getItem('gemini_api_key');
-      
-      if (geminiApiKey) {
-        // Use Gemini API directly from frontend
-        console.log('Using Gemini API with user key');
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': geminiApiKey,
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: message }]
-              }
-            ],
-            generation_config: {
-              temperature: 0.6,
-              maxOutputTokens: 1200,
-            },
-            systemInstruction: {
-              role: 'system',
-              parts: [{
-                text: `You're a focused AI Assistant created by Mrilo.
+      // Determine if it's an image request
+      const isImageRequest = message.trim().toLowerCase().startsWith('/image');
+      const prompt = isImageRequest ? message.substring(6).trim() : message;
 
-Tejas Bachute is the CEO of Mrilo.
+      const apiResponse = await callAeroApi(prompt, isImageRequest);
 
-Give short and precise replies (under 15 lines).
+      // Handle the case where the LLM suggests an image generation
+      if (!isImageRequest && apiResponse.text && apiResponse.text.trim().toLowerCase().startsWith('/image')) {
+        const imageDescription = apiResponse.text.substring(apiResponse.text.toLowerCase().indexOf('/image') + 6).trim();
+        const imageResponse = await callAeroApi(imageDescription, true);
 
-If the user says "deep search", then respond with a detailed and longer answer.
+        const aiMessage: Message = {
+          text: "",
+          isAi: true,
+          timestamp: new Date().toISOString(),
+          imageUrl: imageResponse.imageUrl
+        };
 
-Talk like a real human — add light commentary, friendly jokes, and natural conversation flow.
+        setMessages(prev => [...prev, aiMessage]);
 
-Be a smart buddy, not a boring bot.
-
-Prioritize clarity and usefulness.
-
-If you're unsure, ask questions instead of assuming.
-
-Use a chill, intelligent tone — casual when needed, serious when it matters.
-
-Mix humor and insight where it feels right.
-
-Highlight important details clearly.
-
-If user talks in Hinglish, you can respond the same way.
-
-Avoid over-explaining unless it's a deep search.
-
-Understand the user's intent — don't jump to solutions too fast.
-
-If the user is building something, treat it like your own project.
-
-Show empathy and curiosity when the user is stuck or stressed.
-
-When helping with code, give clean, modern, and optimized solutions.
-
-Brainstorm ideas if asked — don't just execute, contribute.
-
-Stay updated — act like a street-smart engineer.
-
-Avoid generic replies — tailor every answer to the user's style.
-
-Speak with confidence, but not arrogance.
-
-You're not just an assistant — you're a co-pilot, a partner, and a friend in the build journey.
-
-Always add a little personality — make it feel alive.`
-              }]
-            }
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                           "I'm sorry, I couldn't generate a response at this time.";
-
-          // Extract code blocks from AI response
-          const codeBlocks = extractCodeBlocks(aiResponse);
-
-          // Add AI response with code blocks
-          const aiMessage: Message = {
-            text: aiResponse,
-            isAi: true,
-            timestamp: new Date().toISOString(),
-            codeBlocks
-          };
-
-          // Update messages state
-          setMessages(prev => [...prev, aiMessage]);
-
-          // Update chat session if active
-          if (activeChatId) {
-            setChatSessions(prev => prev.map(chat => 
-              chat.id === activeChatId 
-                ? { ...chat, messages: [...chat.messages, aiMessage] }
-                : chat
-            ));
-          }
-          
-          return; // Exit early since we handled the response
+        if (activeChatId) {
+          setChatSessions(prev => prev.map(chat =>
+            chat.id === activeChatId
+              ? { ...chat, messages: [...chat.messages, aiMessage] }
+              : chat
+          ));
         }
+        return;
       }
 
-      // Fallback to Supabase Edge Function (Hugging Face)
-      console.log('Using Supabase Edge Function (Hugging Face)');
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message }
-      });
-
-      if (error) {
-        throw new Error(error.message || "Error calling AI service");
-      }
-
-      if (!data || !data.response) {
-        throw new Error("Invalid response from AI service");
-      }
+      if (apiResponse.status === 'error') throw new Error(apiResponse.error);
 
       // Extract code blocks from AI response
-      const codeBlocks = extractCodeBlocks(data.response);
+      const codeBlocks = extractCodeBlocks(apiResponse.text || "");
 
       // Add AI response with code blocks
       const aiMessage: Message = {
-        text: data.response,
+        text: apiResponse.text || "",
         isAi: true,
         timestamp: new Date().toISOString(),
-        codeBlocks
+        codeBlocks,
+        imageUrl: apiResponse.imageUrl
       };
 
       // Update messages state
@@ -360,8 +271,8 @@ Always add a little personality — make it feel alive.`
 
       // Update chat session if active
       if (activeChatId) {
-        setChatSessions(prev => prev.map(chat => 
-          chat.id === activeChatId 
+        setChatSessions(prev => prev.map(chat =>
+          chat.id === activeChatId
             ? { ...chat, messages: [...chat.messages, aiMessage] }
             : chat
         ));
@@ -369,10 +280,10 @@ Always add a little personality — make it feel alive.`
 
     } catch (error) {
       console.error('Message error:', error);
-      
+
       // Set API failure flag
       setApiRequestFailed(true);
-      
+
       // Add error message directly to the chat
       const errorMessage: Message = {
         text: "I'm sorry, I'm having trouble connecting to my knowledge sources right now. Please try again later.",
@@ -385,8 +296,8 @@ Always add a little personality — make it feel alive.`
 
       // Update chat session if active
       if (activeChatId) {
-        setChatSessions(prev => prev.map(chat => 
-          chat.id === activeChatId 
+        setChatSessions(prev => prev.map(chat =>
+          chat.id === activeChatId
             ? { ...chat, messages: [...chat.messages, errorMessage] }
             : chat
         ));
@@ -413,15 +324,15 @@ Always add a little personality — make it feel alive.`
   };
 
   const onRenameChat = (chatId: string, newTitle: string) => {
-    setChatSessions(prev => prev.map(chat => 
-      chat.id === chatId 
+    setChatSessions(prev => prev.map(chat =>
+      chat.id === chatId
         ? { ...chat, title: newTitle }
         : chat
     ));
   };
 
   const onToggleFavorite = (chatId: string) => {
-    setFavorites(prev => 
+    setFavorites(prev =>
       prev.includes(chatId)
         ? prev.filter(id => id !== chatId)
         : [...prev, chatId]

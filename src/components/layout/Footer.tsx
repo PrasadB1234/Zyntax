@@ -8,7 +8,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <motion.div 
+            <motion.div
               className="relative group"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -23,7 +23,7 @@ export const Footer = () => {
             </motion.div>
             <div className="flex items-center gap-1 text-sm">
               <span className="text-gray-400/80">© 2025</span>
-              <span className="font-medium text-white">MriloAi</span>
+              <span className="font-medium text-white">TejasGPT</span>
               <span className="text-gray-400/80">•</span>
               <span className="text-gray-400/80">Built by</span>
               <span className="font-medium text-white">Tejas Bachute</span>

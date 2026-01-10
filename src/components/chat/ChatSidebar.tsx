@@ -56,7 +56,7 @@ export const ChatSidebar = ({
   const [activeSection, setActiveSection] = useState("home");
 
   // Filter chats based on search query
-  const filteredChats = chatSessions.filter(chat => 
+  const filteredChats = chatSessions.filter(chat =>
     chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     chat.messages.some(msg => msg.text.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -67,19 +67,19 @@ export const ChatSidebar = ({
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     let category = 'older';
-    
+
     if (date.toDateString() === today.toDateString()) {
       category = 'today';
     } else if (date.toDateString() === yesterday.toDateString()) {
       category = 'yesterday';
     }
-    
+
     if (!acc[category]) {
       acc[category] = [];
     }
-    
+
     acc[category].push(chat);
     return acc;
   }, {} as Record<string, ChatSession[]>);
@@ -108,7 +108,7 @@ export const ChatSidebar = ({
   return (
     <>
       {/* Sidebar */}
-      <div 
+      <div
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-[280px] sm:w-[300px] md:w-[320px] bg-[#1A1A1A] border-r border-[#2A2A2A] flex flex-col h-full transition-all duration-300 ease-in-out lg:relative lg:translate-x-0",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -117,9 +117,9 @@ export const ChatSidebar = ({
         {/* New Chat Button */}
         <div className="flex items-center p-3 sm:p-4 border-b border-[#2A2A2A]">
           <h1 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-white to-[#8B5CF6] bg-clip-text text-transparent">Chats</h1>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="ml-auto text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 transition-all duration-300"
             onClick={handleNewChat}
           >
@@ -130,9 +130,9 @@ export const ChatSidebar = ({
 
         {/* Navigation Section */}
         <div className="flex flex-col gap-1 p-2 border-b border-[#2A2A2A]">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className={cn(
               "w-full justify-start text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 transition-all duration-300",
               activeSection === "home" && "text-[#8B5CF6] bg-[#8B5CF6]/10"
@@ -142,9 +142,9 @@ export const ChatSidebar = ({
             <Home className="w-4 h-4 mr-2" />
             <span>Dashboard</span>
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className={cn(
               "w-full justify-start text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 transition-all duration-300",
               activeSection === "discover" && "text-[#8B5CF6] bg-[#8B5CF6]/10"
@@ -154,9 +154,9 @@ export const ChatSidebar = ({
             <Compass className="w-4 h-4 mr-2" />
             <span>Explore AI</span>
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className={cn(
               "w-full justify-start text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 transition-all duration-300",
               activeSection === "spaces" && "text-[#8B5CF6] bg-[#8B5CF6]/10"
@@ -166,9 +166,9 @@ export const ChatSidebar = ({
             <Users className="w-4 h-4 mr-2" />
             <span>Team Workspace</span>
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className={cn(
               "w-full justify-start text-gray-300 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 transition-all duration-300",
               activeSection === "library" && "text-[#8B5CF6] bg-[#8B5CF6]/10"
@@ -224,7 +224,7 @@ export const ChatSidebar = ({
             </div>
           </div>
         )}
-        
+
         <ScrollArea className="flex-1">
           <div className="py-2">
             {activeSection === "library" && (
@@ -280,7 +280,7 @@ export const ChatSidebar = ({
                     </div>
                   </>
                 )}
-                
+
                 {/* Yesterday's chats */}
                 {groupedChats.yesterday && groupedChats.yesterday.length > 0 && (
                   <>
@@ -304,7 +304,7 @@ export const ChatSidebar = ({
                     </div>
                   </>
                 )}
-                
+
                 {/* Older chats */}
                 {groupedChats.older && groupedChats.older.length > 0 && (
                   <>
@@ -333,7 +333,7 @@ export const ChatSidebar = ({
 
             {activeSection === "home" && (
               <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
-                <h3 className="text-lg font-medium text-gray-300 mb-2">Welcome to Mrilo AI</h3>
+                <h3 className="text-lg font-medium text-gray-300 mb-2">Welcome to TejasGPT</h3>
                 <p className="text-sm text-gray-400">Start a new chat or continue from your library</p>
               </div>
             )}
@@ -359,7 +359,7 @@ export const ChatSidebar = ({
             )}
           </div>
         </ScrollArea>
-        
+
         {/* Sidebar Footer */}
         <div className="p-2 border-t border-[#2A2A2A]">
           <Button
@@ -375,9 +375,9 @@ export const ChatSidebar = ({
 
         {/* Close sidebar button for mobile */}
         <div className="p-2 sm:p-3 border-t border-[#2A2A2A] lg:hidden">
-          <Button 
-            variant="outline" 
-            className="w-full text-gray-300 border-[#2A2A2A] hover:bg-[#8B5CF6]/10 hover:text-[#8B5CF6] transition-all duration-300" 
+          <Button
+            variant="outline"
+            className="w-full text-gray-300 border-[#2A2A2A] hover:bg-[#8B5CF6]/10 hover:text-[#8B5CF6] transition-all duration-300"
             onClick={() => setIsSidebarOpen(false)}
           >
             Close Menu
@@ -387,7 +387,7 @@ export const ChatSidebar = ({
 
       {/* Mobile overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -445,8 +445,8 @@ const ChatItem = ({
         onClick={handleSelect}
         className={cn(
           "w-full px-2 sm:px-3 py-2 sm:py-2.5 text-left text-sm transition-all duration-300 rounded-lg flex items-center gap-2",
-          isActive 
-            ? "bg-[#8B5CF6]/20 text-white" 
+          isActive
+            ? "bg-[#8B5CF6]/20 text-white"
             : "text-gray-300 hover:bg-[#8B5CF6]/10 hover:text-white"
         )}
       >
