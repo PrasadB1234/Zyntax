@@ -36,7 +36,7 @@ export const ChatHeader = ({
       <nav className="border-b border-[#2A2A2A] bg-[#1A1A1A] sticky top-0 z-30 w-full">
         <div className={cn(
           "flex h-14 sm:h-16 items-center px-2 sm:px-4 mx-auto transition-all duration-300",
-          isSidebarOpen ? "justify-between max-w-screen-xl" : "justify-between pl-4 lg:pl-[80px] pr-4"
+          isSidebarOpen ? "justify-between w-full" : "justify-between px-4"
         )}>
           {/* Left section with logo */}
           <div className="flex items-center flex-shrink-0">
