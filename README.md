@@ -1,3 +1,8 @@
+# MriloAI
+
+![MriloAI Preview](public/image.png)
+
+MriloAI is A CHATBOT
 
 ## Development Options
 
@@ -33,7 +38,3 @@ For custom domain setup, refer to your chosen hosting provider's documentation.
 ## License
 
 This project is licensed under the MIT License.
-=======
-# MriloAI
-MriloAI is A CHATBOT
->>>>>>> 7410b37d64177a54e024db35b59622de28d47d3c
