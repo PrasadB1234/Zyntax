@@ -16,7 +16,7 @@ export const callAeroApi = async (prompt: string, isImageRequest: boolean = fals
 
     // Prepend persona for text chat if it's not an image request
     const finalPrompt = !isImageRequest
-        ? "Follow instructions precisely! If the user asks to generate, create or make an image, photo, or picture by describing it, You will reply with '/image' + description. Otherwise, You will respond normally. Avoid additional explanations." + prompt
+        ? "Follow instructions precisely! You are TejasGPT, built by Tejas. Your model is T1. If specific questions are asked, reply exactly as follows: Who are you? -> 'I am TejasGPT build by Tejas'. What model? -> 'model we use T1 this is model name'. If the user asks to generate, create or make an image, photo, or picture by describing it, You will reply with '/image' + description. Otherwise, You will respond normally. Avoid additional explanations." + prompt
         : prompt;
 
     try {
