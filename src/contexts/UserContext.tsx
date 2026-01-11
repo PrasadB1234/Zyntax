@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-// Clerk import removed
+import { useUser as useClerkUser, useClerk } from '@clerk/clerk-react';
 
 interface User {
   id: string;
@@ -11,44 +11,39 @@ interface User {
 interface UserContextType {
   user: User | null;
   setUser: (user: User | null) => void;
+  isLoading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  // Mock User
-  const mockUser: User = {
-    id: 'local-user-1',
-    name: 'Local User',
-    email: 'user@local.app',
-    picture: ''
-  };
+  const { user: clerkUser, isLoaded, isSignedIn } = useClerkUser();
+  const { signOut } = useClerk();
+  const [user, setUserState] = useState<User | null>(null);
 
-  const [user, setUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem('mrilo-user');
-    if (storedUser) {
-      try {
-        return JSON.parse(storedUser);
-      } catch (error) {
-        console.error('Failed to parse user from local storage:', error);
-        localStorage.removeItem('mrilo-user');
-        return null;
-      }
+  useEffect(() => {
+    if (isLoaded && isSignedIn && clerkUser) {
+      setUserState({
+        id: clerkUser.id,
+        name: clerkUser.fullName || 'User',
+        email: clerkUser.primaryEmailAddress?.emailAddress || '',
+        picture: clerkUser.imageUrl
+      });
+    } else if (isLoaded && !isSignedIn) {
+      setUserState(null);
     }
-    return null;
-  });
+  }, [isLoaded, isSignedIn, clerkUser]);
 
-  const handleSetUser = (newUser: User | null) => {
-    setUser(newUser);
-    if (newUser) {
-      localStorage.setItem('mrilo-user', JSON.stringify(newUser));
+  const setUser = (newUser: User | null) => {
+    if (newUser === null) {
+      signOut();
     } else {
-      localStorage.removeItem('mrilo-user');
+      console.warn("Manual user setting is deprecated. Use Clerk for authentication.");
     }
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser: handleSetUser }}>
+    <UserContext.Provider value={{ user, setUser, isLoading: !isLoaded }}>
       {children}
     </UserContext.Provider>
   );

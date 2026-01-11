@@ -1,7 +1,6 @@
 import { Plus, Sparkles, LogOut, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { AuthModal } from "@/components/auth/AuthModal";
+import { useClerk } from "@clerk/clerk-react";
 import { useUser } from "@/contexts/UserContext";
 import { useChat } from "@/hooks/use-chat";
 import { cn } from "@/lib/utils";
@@ -24,7 +23,7 @@ export const ChatHeader = ({
   isSidebarOpen,
   handleNewChat
 }: ChatHeaderProps) => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { openSignIn } = useClerk();
   const { user, setUser } = useUser();
   const { setActiveChatId } = useChat();
   const navigate = useNavigate();
@@ -113,7 +112,7 @@ export const ChatHeader = ({
                 variant="default"
                 size="sm"
                 className="bg-[#8B5CF6] hover:bg-[#8B5CF6]/90 text-white transition-all duration-300 flex items-center gap-2 px-2 sm:px-3"
-                onClick={() => setIsAuthModalOpen(true)}
+                onClick={() => openSignIn()}
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
@@ -139,11 +138,6 @@ export const ChatHeader = ({
           </div>
         </div>
       </nav>
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
     </>
   );
 };
