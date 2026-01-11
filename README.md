@@ -1,8 +1,8 @@
-# MriloAI
+# TejasGPT
 
-![MriloAI Preview](public/image.png)
+![TejasGPT Preview](public/image.png)
 
-MriloAI is A CHATBOT
+TejasGPT is A CHATBOT
 
 ## Development Options
 
