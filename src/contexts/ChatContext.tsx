@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { callAeroApi } from '../services/aeroService';
+import { useUser } from './UserContext';
 
 interface Message {
   id: string;
@@ -44,8 +45,13 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
-  // Using a hardcoded user ID for local storage key to simulate a user
-  const LOCAL_STORAGE_KEY = 'mrilo_chat_data_v1';
+  const { user } = useUser();
+
+  // Dynamic storage key based on user ID
+  // If no user is logged in, use a guest key (or legacy key if you prefer preserving guest state)
+  const getStorageKey = (userId?: string) => {
+    return userId ? `mrilo_chat_data_${userId}` : 'mrilo_chat_data_guest';
+  };
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -54,11 +60,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [folders, setFolders] = useState<{ [key: string]: string[] }>({});
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load data from localStorage on mount
+  // Load data from localStorage when user changes or on mount
   useEffect(() => {
     const loadData = () => {
+      setIsInitialized(false);
       try {
-        const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        const key = getStorageKey(user?.id);
+        const storedData = localStorage.getItem(key);
+
         if (storedData) {
           const parsedData = JSON.parse(storedData);
           setChatSessions(parsedData.chatSessions || []);
@@ -70,8 +79,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const activeSession = (parsedData.chatSessions || []).find((s: ChatSession) => s.id === parsedData.activeChatId);
             if (activeSession) {
               setMessages(activeSession.messages);
+            } else {
+              setMessages([]);
             }
+          } else {
+            setActiveChatId(null);
+            setMessages([]);
           }
+        } else {
+          // No data for this user yet
+          setChatSessions([]);
+          setFavorites([]);
+          setFolders({});
+          setActiveChatId(null);
+          setMessages([]);
         }
       } catch (error) {
         console.error('Error loading chat history from local storage:', error);
@@ -80,24 +101,25 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     loadData();
-  }, []);
+  }, [user?.id]); // Re-run when user ID changes
 
   // Save data to localStorage whenever state changes
   useEffect(() => {
     if (!isInitialized) return;
 
     try {
+      const key = getStorageKey(user?.id);
       const dataToSave = {
         chatSessions,
         favorites,
         folders,
         activeChatId
       };
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+      localStorage.setItem(key, JSON.stringify(dataToSave));
     } catch (error) {
       console.error('Error saving chat history to local storage:', error);
     }
-  }, [chatSessions, favorites, folders, activeChatId, isInitialized]);
+  }, [chatSessions, favorites, folders, activeChatId, isInitialized, user?.id]);
 
   // Update messages when active chat changes
   useEffect(() => {
