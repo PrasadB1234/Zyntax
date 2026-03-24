@@ -14,10 +14,8 @@ const IMAGE_API_URL = `https://backend.buildpicoapps.com/aero/run/image-generati
 export const callAeroApi = async (prompt: string, isImageRequest: boolean = false): Promise<AeroResponse> => {
     const apiUrl = isImageRequest ? IMAGE_API_URL : CHAT_API_URL;
 
-    // Prepend persona for text chat if it's not an image request
-    const finalPrompt = !isImageRequest
-        ? "Follow instructions precisely! You are TejasGPT, built by Tejas. Your model is T1. If specific questions are asked, reply exactly as follows: Who are you? -> 'I am TejasGPT build by Tejas'. What model? -> 'model we use T1 this is model name'. If the user asks to generate, create or make an image, photo, or picture by describing it, You will reply with '/image' + description. Otherwise, You will respond normally. Avoid additional explanations." + prompt
-        : prompt;
+    // Pass the prompt directly without any pre-prompted persona
+    const finalPrompt = prompt;
 
     try {
         const response = await fetch(apiUrl, {
