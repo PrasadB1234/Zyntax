@@ -1,8 +1,8 @@
-# TejasGPT
+# Zyntax
 
-![TejasGPT Preview](public/image.png)
+![Zyntax Preview](public/image.png)
 
-TejasGPT is A CHATBOT
+Zyntax is an AI-powered coding assistant and chatbot
 
 ## Development Options
 
