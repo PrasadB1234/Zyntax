@@ -426,7 +426,7 @@ export const ChatSidebar = ({
 
               {activeSection === "home" && (
                 <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
-                  <h3 className="text-lg font-medium text-gray-300 mb-2">Welcome to TejasGPT</h3>
+                  <h3 className="text-lg font-medium text-gray-300 mb-2">Welcome to Zyntax</h3>
                   <p className="text-sm text-gray-400">Start a new chat or continue from your library</p>
                 </div>
               )}

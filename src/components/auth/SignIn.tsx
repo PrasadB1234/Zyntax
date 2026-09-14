@@ -54,7 +54,7 @@ export const SignIn = ({ onClose }: SignInProps) => {
             transition={{ delay: 0.2 }}
             className="text-3xl font-bold text-white mb-2"
           >
-            Welcome to <span className="text-[#8B5CF6]">TejasGPT</span>
+            Welcome to <span className="text-[#8B5CF6]">Zyntax</span>
           </motion.h2>
         </div>
 

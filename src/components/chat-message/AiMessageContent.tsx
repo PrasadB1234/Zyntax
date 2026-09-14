@@ -44,7 +44,7 @@ export const AiMessageContent = ({ message, sources = [], imageUrl }: AiMessageC
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
     >
-      {/* TejasGPT Header with animation */}
+      {/* Zyntax Header with animation */}
       <motion.div
         className="flex items-center gap-2 mb-3"
         initial={{ opacity: 0, x: -20 }}

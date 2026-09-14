@@ -111,7 +111,7 @@ const Index = () => {
       id: "2",
       label: "Summarize",
       icon: <BarChart2 className="h-4 w-4 text-orange-500" />,
-      description: "TejasGPT",
+      description: "Zyntax",
       short: "⌘cmd+p",
       end: "Command",
     },

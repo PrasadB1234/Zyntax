@@ -1,6 +1,6 @@
 # Zyntax
 
-![Zyntax Preview](public/image.png)
+![Zyntax Preview](public/my-account.png)
 
 Zyntax is an AI-powered coding assistant and chatbot
 

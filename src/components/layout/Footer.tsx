@@ -23,7 +23,7 @@ export const Footer = () => {
             </motion.div>
             <div className="flex items-center gap-1 text-sm">
               <span className="text-gray-400/80">© 2025</span>
-              <span className="font-medium text-white">TejasGPT</span>
+              <span className="font-medium text-white">Zyntax</span>
               <span className="text-gray-400/80">•</span>
               <span className="text-gray-400/80">Built by</span>
               <span className="font-medium text-white">Tejas Bachute</span>
